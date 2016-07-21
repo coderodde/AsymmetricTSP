@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import net.coderodde.graph.DirectedGraph;
-import net.coderodde.graph.shortestpath.ShortestPathFinder;
-import net.coderodde.graph.shortestpath.support.DijkstraShortestPathFinder;
 import net.coderodde.graph.tsp.AsymmetricTSPSolver;
 
 /**
@@ -40,9 +38,7 @@ public final class DefaultAsymmetricTSPSolver extends AsymmetricTSPSolver {
             throw new IllegalArgumentException("The input graph is empty.");
         }
         
-        final DirectedGraph workGraph = computeCompleteVersionOf(graph);
-        
-        return findShortestTour(workGraph);
+        return findShortestTour(graph);
     }
     
     private List<Integer> findShortestTour(final DirectedGraph graph) {
@@ -100,59 +96,6 @@ public final class DefaultAsymmetricTSPSolver extends AsymmetricTSPSolver {
                 tentativeTourCost -= tmp;
             }
         }
-    }
-    
-    private DirectedGraph computeCompleteVersionOf(final DirectedGraph graph) {
-        final DirectedGraph workGraph = new DirectedGraph();
-        final ShortestPathFinder shortestPathFinder = 
-                new DijkstraShortestPathFinder();
-        
-        for (final Integer node : graph.getAllNodes()) {
-            workGraph.addNode(node);
-        }
-        
-        final Set<Integer> nodeSet = graph.getAllNodes();
-        
-        for (final Integer nodeA : nodeSet) {
-            for (final Integer nodeB : nodeSet) {
-                if (nodeA.equals(nodeB)) {
-                    continue;
-                }
-                
-                if (graph.hasEdge(nodeA, nodeB)) {
-                    workGraph.addEdge(nodeA, 
-                                      nodeB, 
-                                      graph.getEdgeWeight(nodeA, 
-                                                          nodeB));
-                } else {
-                    final List<Integer> shortestPath = 
-                            shortestPathFinder.findShortestPath(graph,
-                                                                nodeA, 
-                                                                nodeB);
-                    if (shortestPath.isEmpty()) {
-                        throw new IllegalArgumentException(
-                                "The input graph is not connected.");
-                    }
-                    
-                    workGraph.addEdge(nodeA, 
-                                      nodeB, 
-                                      getPathWeight(shortestPath, graph));
-                }
-            }
-        }
-        
-        return workGraph;
-    }
-    
-    private double getPathWeight(final List<Integer> path, 
-                                 final DirectedGraph graph) {
-        double weight = 0.0;
-        
-        for (int i = 0; i < path.size() - 1; ++i) {
-            weight += graph.getEdgeWeight(path.get(i), path.get(i + 1));
-        }
-        
-        return weight; 
     }
     
     private static <T> T firstOf(final List<T> list) {
